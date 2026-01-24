@@ -14,18 +14,10 @@ from src.recommendation.user_context_loader import UserContextLoader
 
 logger = logging.getLogger(__name__)
 
-# ==========================================================
-# Source constants (IMPORTANT for coverage metrics)
-# ==========================================================
-RULE = "RULE"
-POPULAR = "POPULAR"
-SIMILAR_DEPT = "SIMILAR_DEPT"
-INSURANCE = "INSURANCE"
-
 
 class HybridRecommender:
     """
-    Hybrid Recommendation Pipeline (SOURCE-SAFE)
+    Hybrid Recommendation Pipeline
 
     Recall order:
     1. Rule-based
@@ -55,7 +47,7 @@ class HybridRecommender:
         self.popular_items_by_lifecycle = popular_items_by_lifecycle or {}
         self.popular_items_by_behavior = popular_items_by_behavior or {}
 
-        logger.info("HybridRecommender initialized (SOURCE-SAFE)")
+        logger.info("HybridRecommender initialized")
 
     # ==========================================================
     # Public API
@@ -71,11 +63,13 @@ class HybridRecommender:
     ):
         """
         Return:
-        - default: List[item_id]
-        - return_metadata=True:
-            List[{item_id, score, source}], metadata
+        - ranked_items
+        - (optional) metadata for evaluation
         """
 
+        # ------------------------------
+        # Metadata for evaluation
+        # ------------------------------
         metadata = {
             "rule_candidates": 0,
             "fallback_used": False,
@@ -103,11 +97,8 @@ class HybridRecommender:
 
         metadata["rule_candidates"] = len(candidates)
 
-        for pid in candidates:
-            rule_sources.setdefault(pid, set()).add(RULE)
-
         # ------------------------------
-        # 1.5 Fallback recall (if needed)
+        # 1.5 Partial fallback recall
         # ------------------------------
         if len(candidates) < top_k:
             need = top_k - len(candidates)
@@ -125,14 +116,21 @@ class HybridRecommender:
             metadata["fallback_used"] = True
 
             for pid in fb_items:
-                if pid in rule_sources:
+                if pid in rule_scores:
                     continue
 
-                rule_sources[pid] = fb_sources.get(pid, set())
+                rule_scores[pid] = fb_scores.get(pid, 0.1)
+                rule_sources.setdefault(pid, set()).update(
+                    fb_sources.get(pid, {"FALLBACK"})
+                )
                 candidates.append(pid)
+
+                if len(candidates) >= top_k * 3:
+                    break
 
         if not candidates:
             logger.error(f"user_id={user_id} | empty recall set")
+
             if return_metadata:
                 return [], metadata
             return []
@@ -162,85 +160,46 @@ class HybridRecommender:
             lifecycle_stage=user_context["lifecycle_stage"],
         )
 
-        # ======================================================
-        # 5. BUILD ITEM POOL (SOURCE-SAFE)
-        # ======================================================
-        item_pool = []
-        for pid in candidates:
-            item_pool.append({
-                "item_id": pid,
-                "rule_score": rule_scores.get(pid, 0.0),
-                "behavior_score": behavior_scores.get(pid, 0.0),
-                "preference_score": preference_scores.get(pid, 0.0),
-                "lifecycle_score": lifecycle_scores.get(pid, 0.0),
-                "source": set(rule_sources.get(pid, [])),
-            })
-
         # ------------------------------
-        # 6. Ranking (NO SOURCE LOSS)
+        # 5. Ranking
         # ------------------------------
-        ranked_items = self.ranker.rank(
+        ranked = self.ranker.rank(
             rule_scores=rule_scores,
             behavior_scores=behavior_scores,
             preference_scores=preference_scores,
             lifecycle_scores=lifecycle_scores,
             top_k=top_k,
-            return_scores=True,
+            return_scores=False,
         )
 
-
-        final_results = []
-
-        for item_id, score in ranked_items:
-            final_results.append({
-                "item_id": item_id,
-                "score": score,
-                "source": sorted(rule_sources.get(item_id, {INSURANCE})),
-            })
-
-
         # ------------------------------
-        # 7. Insurance fill (guarantee top_k)
+        # 6. Insurance fallback (GUARANTEE top_k)
         # ------------------------------
-        if len(final_results) < top_k:
-            need = top_k - len(final_results)
+        if len(ranked) < top_k:
+            need = top_k - len(ranked)
 
             logger.warning(
-                f"user_id={user_id} | rank_returned={len(final_results)} | insurance_fill={need}"
+                f"user_id={user_id} | rank_returned={len(ranked)} | insurance_fill={need}"
             )
 
             metadata["insurance_used"] = True
-            existing = {r["item_id"] for r in final_results}
 
             for pid in self.popular_items_global:
-                if pid not in existing:
-                    final_results.append({
-                        "item_id": pid,
-                        "score": 0.0,
-                        "source": [INSURANCE],
-                    })
-                if len(final_results) >= top_k:
+                if pid not in ranked:
+                    ranked.append(pid)
+                if len(ranked) >= top_k:
                     break
 
-        metadata["final_returned"] = len(final_results)
-
-        # ------------------------------
-        # Source stats (debug / eval)
-        # ------------------------------
-        metadata.update({
-            "rule_item_count": sum(RULE in r["source"] for r in final_results),
-            "popular_item_count": sum(POPULAR in r["source"] for r in final_results),
-            "insurance_item_count": sum(INSURANCE in r["source"] for r in final_results),
-        })
+        metadata["final_returned"] = len(ranked)
 
         logger.info(
-            f"user_id={user_id} | basket={len(basket)} | returned={len(final_results)}"
+            f"user_id={user_id} | basket={len(basket)} | "
+            f"returned={len(ranked)}"
         )
 
         if return_metadata:
-            return final_results, metadata
-
-        return [r["item_id"] for r in final_results]
+            return ranked, metadata
+        return ranked
 
     # ==========================================================
     # Fallback recall
@@ -258,6 +217,7 @@ class HybridRecommender:
         lifecycle = user_context["lifecycle_stage"]
         behavior = int(user_context["behavior_cluster"])
 
+        # (1) Popular by lifecycle / behavior / global
         popular = (
             self.popular_items_by_lifecycle.get(lifecycle)
             or self.popular_items_by_behavior.get(behavior)
@@ -268,9 +228,10 @@ class HybridRecommender:
             items = popular[:top_k]
             for i, pid in enumerate(items):
                 scores[pid] = 1.0 - i * 0.001
-                sources[pid].add(POPULAR)
+                sources[pid].add("POPULAR")
             return items, scores, sources
 
+        # (2) Basket department similarity
         basket_depts = {
             self.product_department_map.get(int(pid))
             for pid in basket
@@ -287,13 +248,14 @@ class HybridRecommender:
             items = similar_items[:top_k]
             for i, pid in enumerate(items):
                 scores[pid] = 0.8 - i * 0.001
-                sources[pid].add(SIMILAR_DEPT)
+                sources[pid].add("SIMILAR_DEPT")
             return items, scores, sources
 
+        # (3) Insurance recall
         items = self.popular_items_global[:top_k]
         for i, pid in enumerate(items):
             scores[pid] = 0.5 - i * 0.001
-            sources[pid].add(INSURANCE)
+            sources[pid].add("INSURANCE")
 
         return items, scores, sources
 

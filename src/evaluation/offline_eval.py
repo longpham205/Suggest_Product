@@ -20,13 +20,7 @@ from src.evaluation.metrics import (
     user_coverage,
 )
 
-from src.recommendation.hybrid_recommender import (
-    HybridRecommender,
-    RULE,
-    POPULAR,
-    SIMILAR_DEPT,
-    INSURANCE,
-)
+from src.recommendation.hybrid_recommender import HybridRecommender
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -39,9 +33,9 @@ class OfflineEvaluator:
     Metrics:
         - Precision@K
         - Recall@K
+        - F1@K
         - HitRate@K
-        - UserCoverage
-        - Source Coverage Metrics (RULE / POPULAR / INSURANCE / SIMILAR_DEPT)
+        - User Coverage
     """
 
     def __init__(
@@ -52,6 +46,9 @@ class OfflineEvaluator:
         self.recommender = recommender
         self.max_users = max_users
 
+        # -----------------------
+        # Load orders
+        # -----------------------
         orders_df = pd.read_csv(ORDERS_PATH)
         orders_df.columns = orders_df.columns.str.strip()
 
@@ -81,9 +78,7 @@ class OfflineEvaluator:
             self.user_ground_truth = {u: self.user_ground_truth[u] for u in users}
             self.user_history = {u: self.user_history.get(u, []) for u in users}
 
-        logger.info(
-            f"OfflineEvaluator initialized with {len(self.user_ground_truth)} users."
-        )
+        logger.info(f"OfflineEvaluator initialized with {len(self.user_ground_truth)} users.")
 
     # ============================================================
     # Builders
@@ -113,93 +108,59 @@ class OfflineEvaluator:
         save_path: Optional[str] = None,
     ) -> Dict[str, float]:
 
-        precisions, recalls, hit_rates = [], [], []
+        precisions: List[float] = []
+        recalls: List[float] = []
+        f1s: List[float] = []
+        hit_rates: List[float] = []
+
         user_recommendations: Dict[int, List[str]] = {}
-
-        # -------- Source coverage counters --------
-        users_with_rule = 0
-        total_recommended_items = 0
-        rule_item_count = 0
-
-        slot_rule_users = defaultdict(set)   # position -> set(user_id)
-        hit_source_count = defaultdict(int)
-
-        evaluated_users = 0
 
         for user_id, ground_truth in self.user_ground_truth.items():
             history = self.user_history.get(user_id, [])
             if not history:
                 continue
 
-            recs, _ = self.recommender.recommend(
+            recs = self.recommender.recommend(
                 user_id=user_id,
-                basket=history[-5:],
+                basket=history[-5:],     # last-N basket
                 time_bucket="unknown",
                 is_weekend=False,
                 top_k=k,
-                return_metadata=True,
             )
 
             if not recs:
                 user_recommendations[user_id] = []
                 continue
 
-            evaluated_users += 1
-
-            # -------- User-level rule coverage --------
-            if any(str(RULE) in r["source"] for r in recs):
-                users_with_rule += 1
-
-            # -------- Item & slot coverage --------
-            for idx, r in enumerate(recs):
-                total_recommended_items += 1
-                sources = r.get("source", [])
-
-                if str(RULE) in sources:
-                    rule_item_count += 1
-                    slot_rule_users[idx + 1].add(user_id)
-
-                # -------- Hit source (primary only) --------
-                if str(r["item_id"]) in ground_truth and sources:
-                    primary_source = sources[0]
-                    hit_source_count[primary_source] += 1
-
-            recommended_items = [str(r["item_id"]) for r in recs]
+            recommended_items = [str(pid) for pid in recs]
             user_recommendations[user_id] = recommended_items
 
-            precisions.append(precision_at_k(recommended_items, ground_truth, k))
-            recalls.append(recall_at_k(recommended_items, ground_truth, k))
+            p = precision_at_k(recommended_items, ground_truth, k)
+            r = recall_at_k(recommended_items, ground_truth, k)
+
+            precisions.append(p)
+            recalls.append(r)
             hit_rates.append(hit_rate_at_k(recommended_items, ground_truth, k))
 
-        if evaluated_users == 0:
+            # -------- F1@K --------
+            if p + r > 0:
+                f1s.append(2 * p * r / (p + r))
+            else:
+                f1s.append(0.0)
+
+        n_users = len(precisions)
+        if n_users == 0:
             logger.warning("No users evaluated.")
             return {}
 
-        # ============================================================
-        # Final metrics
-        # ============================================================
-
         metrics = {
-            f"Precision@{k}": sum(precisions) / evaluated_users,
-            f"Recall@{k}": sum(recalls) / evaluated_users,
-            f"HitRate@{k}": sum(hit_rates) / evaluated_users,
+            f"Precision@{k}": sum(precisions) / n_users,
+            f"Recall@{k}": sum(recalls) / n_users,
+            f"F1@{k}": sum(f1s) / n_users,
+            f"HitRate@{k}": sum(hit_rates) / n_users,
             "UserCoverage": user_coverage(user_recommendations),
-            "RuleUserCoverage": users_with_rule / evaluated_users,
-            "RuleItemShare": rule_item_count / max(1, total_recommended_items),
-            "num_users_evaluated": evaluated_users,
+            "num_users_evaluated": n_users,
         }
-
-        # Slot coverage
-        for pos in [1, 3, 5]:
-            metrics[f"RuleSlot@{pos}"] = (
-                len(slot_rule_users[pos]) / evaluated_users
-            )
-
-        # Hit source share
-        total_hits = sum(hit_source_count.values())
-        if total_hits > 0:
-            for src, cnt in hit_source_count.items():
-                metrics[f"{src}_HitShare"] = cnt / total_hits
 
         logger.info("Offline evaluation completed")
 

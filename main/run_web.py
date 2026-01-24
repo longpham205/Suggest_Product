@@ -2,6 +2,11 @@
 
 import uvicorn
 import logging
+import os
+import sys
+
+root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+sys.path.insert(0, root_dir)
 
 HOST = "0.0.0.0"
 PORT = 8000
@@ -22,7 +27,7 @@ def run_backend():
     )
 
     uvicorn.run(
-        "main:app",
+        "web.backend.main:app",
         host=HOST,
         port=PORT,
         reload=RELOAD,

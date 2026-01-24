@@ -208,12 +208,12 @@ def main():
     # -------------------------------------------------- 
     # 1. Single-user debug 
     # --------------------------------------------------  
-    # run_single_user_test( 
-    #     recommender=recommender, 
-    #     user_context_loader=user_context_loader,
-    #     max_users=5,
-    #     basket_size=3, 
-    # )
+    run_single_user_test( 
+        recommender=recommender, 
+        user_context_loader=user_context_loader,
+        max_users=5,
+        basket_size=3, 
+    )
 
     # -------------------------------------------------- 
     # 2. Offline evaluation 

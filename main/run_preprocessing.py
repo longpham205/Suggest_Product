@@ -15,6 +15,8 @@ from src.preprocessing.build_behavior_features import build_behavior_features
 from src.preprocessing.build_preference_features import build_preference_features
 from src.preprocessing.build_lifecycle_features import build_lifecycle_features
 from src.preprocessing.build_transactions_context import build_transactions_context
+from src.scripts.build_popularity_checkpoints import build_checkpoints 
+
 
 from src.config import settings
 
@@ -49,16 +51,16 @@ def run_preprocessing():
     # =====================================================
     # MERGE DATA (OPTIONAL – FOR ANALYSIS / REPORT)
     # =====================================================
-    # logger.info("Merging datasets for analysis...")
-    # merged = merge_instacart_data(
-    #     orders=cleaned["orders"],
-    #     order_products=cleaned["order_products"],
-    #     products=cleaned["products"],
-    #     aisles=cleaned["aisles"],
-    #     departments=cleaned["departments"]
-    # )
-    # merged.to_csv(settings.MERGED_DATA_PATH, index=False)
-    # logger.info(f"Merged data saved: {merged.shape}")
+    logger.info("Merging datasets for analysis...")
+    merged = merge_instacart_data(
+        orders=cleaned["orders"],
+        order_products=cleaned["order_products"],
+        products=cleaned["products"],
+        aisles=cleaned["aisles"],
+        departments=cleaned["departments"]
+    )
+    merged.to_csv(settings.MERGED_DATA_PATH, index=False)
+    logger.info(f"Merged data saved: {merged.shape}")
 
     # =====================================================
     # BUILD FEATURES (ALWAYS USE RAW DATA)
@@ -88,6 +90,13 @@ def run_preprocessing():
         raw["orders"],
         raw["order_products"]
     ).to_csv(settings.TRANSACTIONS_CONTEXT_PATH,   index=False )
+    
+    # =====================================================
+    # EXPORT DATA FOR WEB BACKEND
+    # =====================================================
+    if getattr(settings, "ENABLE_WEB_EXPORT", False):
+        logger.info("Exporting data for web backend...")
+        build_checkpoints()
 
     logger.info("=" * 60)
     logger.info("PREPROCESSING PIPELINE FINISHED SUCCESSFULLY")

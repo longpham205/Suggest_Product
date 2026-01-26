@@ -3,49 +3,50 @@
 <!DOCTYPE html>
 
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8" />
     <title>Giỏ hàng của bạn</title>
     <link rel="stylesheet" href="../statics/stylegiohang.css" />
 </head>
+
 <body>
 
-<div class="Topgiohang">
-    <img src="../statics/logo.png" alt="Logo" class="logo" />
-    <p class="intro-line">Giỏ hàng</p>
-    <a href="index.html" class="back-home-btn">← Quay lại trang chủ</a>
-</div>
-
-<div class="cart-bar">
-    <div><strong>Tên sản phẩm</strong></div>
-    <div><strong>Đơn giá</strong></div>
-    <div><strong>Số lượng</strong></div>
-    <div><strong>Thành tiền</strong></div>
-    <div><strong>Thao tác</strong></div>
-</div>
-
-
-<div class="cart-container" id="cartContainer">
-    <!-- render bằng JS -->
-</div>
-
-<div class="cart-summary-bar">
-    <div class="summary-left">
-        <span><strong>Tổng sản phẩm:</strong> <span id="totalQty">0</span></span>
+    <div class="Topgiohang">
+        <img src="../statics/logo.png" alt="Logo" class="logo" />
+        <p class="intro-line">Giỏ hàng</p>
+        <a href="index.html" class="back-home-btn">← Quay lại trang chủ</a>
     </div>
 
-```
-<div class="summary-right">
-    <span class="total-price">Tổng tiền: <span id="totalPrice">0đ</span></span>
-</div>
-```
+    <div class="cart-bar">
+        <div><strong>Tên sản phẩm</strong></div>
+        <div><strong>Đơn giá</strong></div>
+        <div><strong>Số lượng</strong></div>
+        <div><strong>Thành tiền</strong></div>
+        <div><strong>Thao tác</strong></div>
+    </div>
 
-</div>
 
-<div class="cart-scroll-spacer"></div>
-<script src="../scripts/main.js"></script>
-<script src="../scripts/api.js"></script>
-<script src="../scripts/basket_ui.js"></script>
+    <div class="cart-container" id="cartContainer">
+        <!-- render bằng JS -->
+    </div>
+
+    <div class="cart-summary-bar">
+        <div class="summary-left">
+            <span><strong>Tổng sản phẩm:</strong> <span id="totalQty">0</span></span>
+        </div>
+
+        <div class="summary-right">
+            <span class="total-price">Tổng tiền: <span id="totalPrice">0đ</span></span>
+        </div>
+
+    </div>
+
+    <div class="cart-scroll-spacer"></div>
+    <script src="../scripts/main.js?v=4"></script>
+    <script src="../scripts/api.js?v=4"></script>
+    <script src="../scripts/basket_ui.js?v=4"></script>
 
 </body>
+
 </html>

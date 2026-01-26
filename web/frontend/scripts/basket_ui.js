@@ -1,20 +1,21 @@
 // scripts/basket_ui.js
 document.addEventListener("DOMContentLoaded", () => {
+
+    // Check if App is ready
+    if (!window.App) {
+        console.error("[Basket UI] App not loaded");
+        return;
+    }
+
     const cartContainer = document.getElementById("cartContainer");
     const summaryProduct = document.querySelector(".summary-left span");
     const summaryPrice = document.querySelector(".total-price");
+    const totalQtyEl = document.getElementById("totalQty");
+    const totalPriceEl = document.getElementById("totalPrice");
 
     /* ======================
        Utils
     ====================== */
-    function getCart() {
-        return JSON.parse(localStorage.getItem("cart")) || [];
-    }
-
-    function setCart(cart) {
-        localStorage.setItem("cart", JSON.stringify(cart));
-    }
-
     function formatPrice(number) {
         return number.toLocaleString("vi-VN") + "đ";
     }
@@ -31,27 +32,44 @@ document.addEventListener("DOMContentLoaded", () => {
             totalMoney += item.qty * item.price;
         });
 
-        summaryProduct.innerHTML =
-            `<strong>Tổng sản phẩm:</strong> ${totalQty}`;
-
-        summaryPrice.innerText =
-            `Tổng tiền: ${formatPrice(totalMoney)}`;
+        if (totalQtyEl) totalQtyEl.innerText = totalQty;
+        if (totalPriceEl) totalPriceEl.innerText = formatPrice(totalMoney);
     }
 
     /* ======================
        Render Cart
     ====================== */
     function renderCart() {
-        const cart = getCart();
+        // Use App.getCart() to get the correct user's cart
+        const cart = App.getCart();
         cartContainer.innerHTML = "";
 
         if (cart.length === 0) {
-            cartContainer.innerHTML = `<p class="empty-cart">Giỏ hàng trống</p>`;
+            const user = App.getUserContext();
+            const userId = user.user_id;
+            const contextRaw = localStorage.getItem("user_context");
+            const cartKey = userId ? `cart_user_${userId}` : "N/A";
+            const cartRaw = userId ? localStorage.getItem(cartKey) : "N/A";
+
+            const debugInfo = `
+                <div style="font-size:12px; color:#666; margin-top:10px; text-align:left; background:#f5f5f5; padding:10px; border-radius:4px;">
+                    <strong>Debug Info:</strong><br/>
+                    User ID in App: ${userId || "null"}<br/>
+                    LocalStorage [user_context]: ${contextRaw || "null"}<br/>
+                    Expected Cart Key: ${cartKey}<br/>
+                    LocalStorage [${cartKey}]: ${cartRaw ? "Found data" : "null/empty"}
+                </div>
+            `;
+
+            cartContainer.innerHTML = `<p class="empty-cart" style="text-align:center; padding:20px;">
+                Giỏ hàng trống<br/>
+                <a href="index.html">Quay lại mua sắm</a>
+            </p>${debugInfo}`;
             updateSummary([]);
             return;
         }
 
-        cart.forEach((item, index) => {
+        cart.forEach((item) => {
             const row = document.createElement("div");
             row.className = "cart-row";
 
@@ -76,32 +94,24 @@ document.addEventListener("DOMContentLoaded", () => {
             `;
 
             /* ======================
-               Events
+               Events (Use App methods)
             ====================== */
             row.querySelector(".plus").onclick = () => {
-                cart[index].qty++;
-                setCart(cart);
+                App.updateCartQty(item.product_id, 1);
                 renderCart();
             };
 
             row.querySelector(".minus").onclick = () => {
-                if (cart[index].qty === 1) {
-                    if (!confirm("Bạn có chắc chắn muốn xoá sản phẩm này không?")) {
-                        return;
-                    }
-                    cart.splice(index, 1);
-                } else {
-                    cart[index].qty--;
+                if (item.qty === 1) {
+                    if (!confirm("Bạn có chắc chắn muốn xoá sản phẩm này không?")) return;
                 }
-
-                setCart(cart);
+                App.updateCartQty(item.product_id, -1);
                 renderCart();
             };
 
             row.querySelector(".delete-btn").onclick = () => {
                 if (confirm("Bạn có chắc chắn muốn xoá sản phẩm này không?")) {
-                    cart.splice(index, 1);
-                    setCart(cart);
+                    App.removeFromCart(item.product_id);
                     renderCart();
                 }
             };
@@ -115,5 +125,8 @@ document.addEventListener("DOMContentLoaded", () => {
     /* ======================
        Init
     ====================== */
-    renderCart();
+    // Wait for App to initialize data from localStorage
+    setTimeout(() => {
+        renderCart();
+    }, 100);
 });

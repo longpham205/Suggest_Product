@@ -34,6 +34,9 @@ LIFECYCLE_FEATURES_PATH = DATA_PROCESSED_DIR / "lifecycle_features.csv"
 
 TRANSACTIONS_CONTEXT_PATH = DATA_PROCESSED_DIR / "transactions_context.csv"
 
+# Purchase history for recommendation service
+PURCHASE_HISTORY_CSV_PATH = DATA_PROCESSED_DIR / "merged_data.csv"
+
 # =================================================
 # CHECKPOINTS
 # =================================================
@@ -63,6 +66,15 @@ PREFERENCE_SCALER_PATH = (
 PREFERENCE_CLUSTER_SCORE_PATH = (
     PREFERENCE_CHECKPOINT_DIR / "preference_cluster_department_scores.pkl"
 )
+
+# ---- Product/Popular items for recommendation ----
+RECOMMENDATION_CHECKPOINT_DIR = CHECKPOINT_DIR / "recommendation"
+RECOMMENDATION_CHECKPOINT_DIR.mkdir(parents=True, exist_ok=True)
+
+PRODUCT_DEPARTMENT_PATH = RECOMMENDATION_CHECKPOINT_DIR / "product_department_map.json"
+POPULAR_ITEMS_GLOBAL_PATH = RECOMMENDATION_CHECKPOINT_DIR / "popular_items_global.pkl"
+POPULAR_ITEMS_BY_LIFECYCLE_PATH = RECOMMENDATION_CHECKPOINT_DIR / "popular_items_by_lifecycle.pkl"
+POPULAR_ITEMS_BY_BEHAVIOR_PATH = RECOMMENDATION_CHECKPOINT_DIR / "popular_items_by_behavior.pkl"
 
 # ---- Spark (Parquet) ----
 TRANSACTIONS_CONTEXT_EXTENDED_PATH = (
@@ -240,11 +252,11 @@ CONTEXT_MIN_TXNS_BY_LEVEL = {
 }
 # Weight decay when falling back from specific
 FPGROWTH_LEVEL_DECAY = {
-    "L1": 1.0,
-    "L2": 0.85,
-    "L3": 0.70,
-    "L4": 0.50,
-    "L5": 0.30,
+    "L1": 2.0,    # Tăng mạnh L1 (specific nhất)
+    "L2": 1.8,    # Tăng mạnh L2
+    "L3": 1.5,    # Tăng L3
+    "L4": 1.2,    # Tăng L4
+    "L5": 0.3,    # Giảm mạnh L5/GLOBAL
 }
 
 # Basket size thresholds

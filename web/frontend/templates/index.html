@@ -3,150 +3,117 @@
 <!DOCTYPE html>
 
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8" />
     <title>Hệ thống gợi ý sản phẩm thông minh</title>
     <link rel="stylesheet" href="../statics/style.css" />
 </head>
+
 <body>
 
-<!-- ================= TOP BAR ================= -->
+    <!-- ================= TOP BAR ================= -->
 
-<div class="top-bar">
-    <img src="../statics/logo.png" alt="Logo" class="logo" />
+    <div class="top-bar">
+        <img src="../statics/logo.png" alt="Logo" class="logo" />
 
-```
-<div class="brand">
-    <p class="intro-line">Hệ thống gợi ý sản phẩm thông minh</p>
-    <p class="brand-sub">Kết hợp phân cụm & luật kết hợp theo ngữ cảnh</p>
-</div>
-
-<div class="user-section">
-    <input
-        type="text"
-        id="userIdInput"
-        placeholder="Nhập User ID"
-        autocomplete="off"
-    />
-    <button class="recommend-btn">Gợi ý sản phẩm</button>
-
-    <div class="cart-wrapper">
-    <a href="basket.html" class="cart-btn">
-        🛒
-        <span id="cartCount" class="cart-count">0</span>
-    </a>
-</div>
-
-</div>
-```
-
-</div>
-
-<!-- ================= MAIN LAYOUT ================= -->
-
-<div class="dashboard">
-
-```
-<!-- ================= SIDEBAR ================= -->
-<aside class="sidebar">
-
-    <!-- ===== CONTEXT ===== -->
-    <div class="time-context">
-        <h3><strong>Ngữ cảnh thời gian</strong></h3>
-
-        <div class="time-field">
-            <label for="dayContext">Loại ngày</label>
-            <select id="dayContext">
-                <option value="weekday">Ngày thường</option>
-                <option value="weekend">Cuối tuần</option>
-            </select>
+        <div class="brand">
+            <p class="intro-line">Hệ thống gợi ý sản phẩm thông minh</p>
+            <p class="brand-sub">Kết hợp phân cụm & luật kết hợp theo ngữ cảnh</p>
         </div>
 
-        <div class="time-field">
-            <label for="timeContext">Thời gian</label>
-            <select id="timeContext">
-                <option value="morning">Buổi sáng</option>
-                <option value="afternoon">Buổi chiều</option>
-                <option value="evening">Buổi tối</option>
-                <option value="night">Ban đêm</option>
-            </select>
+        <div class="user-section">
+            <input type="text" id="userIdInput" placeholder="Nhập User ID" autocomplete="off" />
+            <button class="recommend-btn">Gợi ý sản phẩm</button>
+
+            <div class="cart-wrapper">
+                <a href="basket.html" class="cart-btn">
+                    🛒
+                    <span id="cartCount" class="cart-count">0</span>
+                </a>
+            </div>
+
         </div>
+
     </div>
 
-    <!-- ===== USER INFO ===== -->
-    <div class="user-info">
-        <h3>Thông tin người dùng</h3>
-        <div class="usi">
-            <p><strong>User ID:</strong> <span id="uiUserId">---</span></p>
-            <p><strong>Phân cụm:</strong> <span id="uiUserCluster">---</span></p>
-            <p><strong>Loại khách:</strong> <span id="uiUserType">---</span></p>
-        </div>
+    <!-- ================= MAIN LAYOUT ================= -->
+
+    <div class="dashboard">
+
+        <!-- ================= SIDEBAR ================= -->
+        <aside class="sidebar">
+
+            <!-- ===== CONTEXT ===== -->
+            <div class="time-context">
+                <h3><strong>Ngữ cảnh thời gian</strong></h3>
+
+                <div class="time-field">
+                    <label for="dayContext">Loại ngày</label>
+                    <select id="dayContext">
+                        <option value="weekday">Ngày thường</option>
+                        <option value="weekend">Cuối tuần</option>
+                    </select>
+                </div>
+
+                <div class="time-field">
+                    <label for="timeContext">Thời gian</label>
+                    <select id="timeContext">
+                        <option value="morning">Buổi sáng</option>
+                        <option value="afternoon">Buổi chiều</option>
+                        <option value="evening">Buổi tối</option>
+                        <option value="night">Ban đêm</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- ===== USER INFO ===== -->
+            <div class="user-info">
+                <h3>Thông tin người dùng</h3>
+                <div class="usi">
+                    <p><strong>User ID:</strong> <span id="uiUserId">---</span></p>
+                    <p><strong>Phân cụm:</strong> <span id="uiUserCluster">---</span></p>
+                    <p><strong>Loại khách:</strong> <span id="uiUserType">---</span></p>
+                </div>
+            </div>
+
+            <!-- ===== ORDER HISTORY ===== -->
+            <div class="order-history">
+                <h3>Lịch sử mua hàng (gần nhất)</h3>
+                <div class="order-list" id="orderHistory">
+                    <!-- render bằng JS -->
+                </div>
+            </div>
+
+        </aside>
+
+        <!-- ================= MAIN CONTENT ================= -->
+        <main class="content">
+
+            <h2>Gợi ý cho bạn</h2>
+
+            <!-- ===== REALTIME RECOMMEND (KHI ADD CART) ===== -->
+            <div id="realtimeSuggest" class="realtime-suggest"></div>
+
+            <!-- ===== PRODUCT GRID ===== -->
+            <div class="products-grid" id="productGrid">
+                <div class="no-results" style="grid-column: 1/-1; text-align: center; padding: 20px;">
+                    Vui lòng nhập User ID và bấm "Gợi ý sản phẩm"
+                </div>
+            </div>
+
+        </main>
+
+
     </div>
 
-    <!-- ===== ORDER HISTORY ===== -->
-    <div class="order-history">
-        <h3>Lịch sử mua hàng (gần nhất)</h3>
-        <div class="order-list" id="orderHistory">
-            <!-- render bằng JS -->
-        </div>
-    </div>
+    <!-- ================= SCRIPTS ================= -->
 
-</aside>
-
-<!-- ================= MAIN CONTENT ================= -->
-<main class="content">
-
-    <h2>Gợi ý cho bạn</h2>
-
-    <!-- ===== REALTIME RECOMMEND (KHI ADD CART) ===== -->
-    <div id="realtimeSuggest" class="realtime-suggest"></div>
-
-    <!-- ===== PRODUCT GRID ===== -->
-    <div class="products-grid" id="productGrid">
-
-        <!-- SAMPLE PRODUCT CARD -->
-        <div class="product-card"
-             data-id="A01"
-             data-name="Sản phẩm A"
-             data-price="100000">
-            <p class="name">Sản phẩm A</p>
-            <p class="cost">100.000đ</p>
-            <button class="add-product">Thêm</button>
-        </div>
-
-        <div class="product-card"
-             data-id="B02"
-             data-name="Sản phẩm B"
-             data-price="250000">
-            <p class="name">Sản phẩm B</p>
-            <p class="cost">250.000đ</p>
-            <button class="add-product">Thêm</button>
-        </div>
-
-        <div class="product-card"
-             data-id="C03"
-             data-name="Sản phẩm C"
-             data-price="180000">
-            <p class="name">Sản phẩm C</p>
-            <p class="cost">180.000đ</p>
-            <button class="add-product">Thêm</button>
-        </div>
-
-        <!-- JS sẽ render thêm -->
-    </div>
-
-</main>
-```
-
-</div>
-
-<!-- ================= SCRIPTS ================= -->
-
-<script src="../scripts/main.js"></script>
-<script src="../scripts/api.js"></script>
-
-<script src="../scripts/index_ui.js"></script>
+    <script src="../scripts/main.js?v=8"></script>
+    <script src="../scripts/api.js?v=8"></script>
+    <script src="../scripts/index_ui.js?v=8"></script>
 
 
 </body>
+
 </html>

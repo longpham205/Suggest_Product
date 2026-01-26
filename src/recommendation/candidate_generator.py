@@ -131,23 +131,47 @@ class CandidateGenerator:
         return best_level
 
     # ==============================================================
-    # CONTEXT MATCH (CORE FIX)
+    # CONTEXT MATCH (RELAXED VERSION)
     # ==============================================================
     @staticmethod
     def _context_match(user_context: Dict[str, str], context_key: str) -> bool:
         """
-        Match user_context với context_key đã train
-        user có nhiều dim hơn vẫn match được
+        Strict match (legacy) - wrapper for backward compatibility
+        """
+        matched, ratio = CandidateGenerator._context_match_relaxed(user_context, context_key, 1.0)
+        return matched
+    
+    @staticmethod
+    def _context_match_relaxed(
+        user_context: Dict[str, str], 
+        context_key: str, 
+        min_match_ratio: float = 0.6
+    ) -> tuple:
+        """
+        Relaxed matching: cho phép match >= min_match_ratio dimensions
+        
+        Returns:
+            (is_matched: bool, match_ratio: float)
         """
         if context_key == "GLOBAL":
-            return True
+            return True, 1.0
 
-        for part in context_key.split("|"):
+        parts = context_key.split("|")
+        if not parts:
+            return True, 1.0
+            
+        matched = 0
+        total = len(parts)
+        
+        for part in parts:
+            if "=" not in part:
+                continue
             k, v = part.split("=", 1)
-            if user_context.get(k) != v:
-                return False
+            if user_context.get(k) == v:
+                matched += 1
 
-        return True
+        ratio = matched / total if total > 0 else 0.0
+        return ratio >= min_match_ratio, ratio
 
     # ==============================================================
     # USER CONTEXT
@@ -193,23 +217,31 @@ class CandidateGenerator:
         matched_contexts: List[str] = []
 
         # ==================================================
-        # L1 → L5 hierarchical recall
+        # L1 → L5 hierarchical recall (RELAXED MATCHING)
         # ==================================================
         for level in self.context_levels:
             decay = FPGROWTH_LEVEL_DECAY.get(level, 1.0)
             level_hits = 0
+            contexts_available = len(self.rules_by_level.get(level, {}))
+            contexts_matched = 0
 
             for ctx_key, rule_index in self.rules_by_level.get(level, {}).items():
 
                 # --------------------------------------------------
-                # CONTEXT FILTER
-                # L1–L4: phải match context
-                # L5: GLOBAL → bỏ qua context
+                # CONTEXT FILTER (RELAXED)
+                # L1–L4: sử dụng relaxed matching (≥60%)
+                # L5: GLOBAL → luôn match
                 # --------------------------------------------------
                 if level != "L5":
-                    if not self._context_match(user_context, ctx_key):
+                    is_matched, match_ratio = self._context_match_relaxed(
+                        user_context, ctx_key, min_match_ratio=0.6
+                    )
+                    if not is_matched:
                         continue
-
+                else:
+                    match_ratio = 1.0
+                
+                contexts_matched += 1
                 ctx_hits = 0
 
                 for ant in antecedents:
@@ -220,7 +252,8 @@ class CandidateGenerator:
                             continue
 
                         score = float(r.get("score", 0.0))
-                        final_scores[pid] += score * decay
+                        # Apply decay AND match_ratio as weight
+                        final_scores[pid] += score * decay * match_ratio
                         rule_sources[pid].add(level)
 
                         ctx_hits += 1
@@ -228,8 +261,14 @@ class CandidateGenerator:
 
                 if ctx_hits > 0:
                     matched_contexts.append(
-                        f"{level}::{ctx_key} (hits={ctx_hits}, decay={decay:.2f})"
+                        f"{level}::{ctx_key} (hits={ctx_hits}, decay={decay:.2f}, match={match_ratio:.0%})"
                     )
+
+            # Log level stats
+            logger.info(
+                f"[{level}] contexts_available={contexts_available}, "
+                f"contexts_matched={contexts_matched}, level_hits={level_hits}"
+            )
 
             # nếu level này không recall được gì → tiếp tục fallback
             if level_hits == 0:

@@ -4,8 +4,8 @@ window.Api = (function () {
 
     /* ========= CONFIG ========= */
 
-    // 👉 chỉnh đúng URL backend của bạn ở đây
-    const BASE_URL = "http://localhost:8000";
+
+    const BASE_URL = "";
 
     const DEFAULT_HEADERS = {
         "Content-Type": "application/json"
@@ -70,12 +70,33 @@ window.Api = (function () {
         return request("/health", "GET");
     }
 
+    /* ========= EVALUATE ========= */
+
+    /**
+     * Run offline evaluation
+     * payload = { max_users, top_k }
+     */
+    function evaluate(payload = { max_users: 50, top_k: 10 }) {
+        console.log("[API] /evaluate", payload);
+        return request("/evaluate", "POST", payload);
+    }
+
+    /**
+     * Quick evaluation via GET
+     */
+    function evaluateQuick(maxUsers = 50, topK = 10) {
+        console.log("[API] /evaluate/quick", { maxUsers, topK });
+        return request(`/evaluate/quick?max_users=${maxUsers}&top_k=${topK}`, "GET");
+    }
+
     /* ========= PUBLIC API ========= */
 
     return {
         recommend,
         cartBoost,
-        health
+        health,
+        evaluate,
+        evaluateQuick
     };
 
 })();

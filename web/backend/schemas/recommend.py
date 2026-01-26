@@ -1,4 +1,4 @@
-# schemas/recommend.py
+# web/backend/schemas/recommend.py
 
 from pydantic import BaseModel, Field
 from typing import List, Optional

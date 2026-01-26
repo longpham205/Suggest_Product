@@ -33,20 +33,42 @@ window.App = (function () {
 
     /* ========= INIT ========= */
 
+    /* ========= INIT ========= */
+
     function init() {
+        loadUserContext(); // 🔥 Restore user context FIRST
         loadCartFromStorage();
-        notifyCartChanged(); // 🔥 update badge ngay khi load
-        console.log("[App] Initialized", state);
+        notifyCartChanged();
+        console.log("[App] Initialized with User:", state.user.user_id);
     }
 
     /* ========= USER CONTEXT ========= */
 
+    /* ========= USER CONTEXT ========= */
+
     function setUserContext({ user_id, time_bucket, is_weekend }) {
+        const oldUserId = state.user.user_id;
         state.user.user_id = Number(user_id);
         state.user.time_bucket = time_bucket;
         state.user.is_weekend = Boolean(is_weekend);
 
-        console.log("[App] User context set:", state.user);
+        // Persist user context
+        localStorage.setItem("user_context", JSON.stringify(state.user));
+        console.log("[App] User context saved:", state.user);
+
+        // Reload cart if user changed
+        if (oldUserId !== state.user.user_id) {
+            loadCartFromStorage();
+            notifyCartChanged();
+        }
+    }
+
+    function loadUserContext() {
+        const saved = localStorage.getItem("user_context");
+        if (saved) {
+            state.user = JSON.parse(saved);
+            console.log("[App] User context loaded:", state.user);
+        }
     }
 
     function getUserContext() {
@@ -55,12 +77,26 @@ window.App = (function () {
 
     /* ========= CART STATE ========= */
 
+    function getCartKey() {
+        if (state.user.user_id) {
+            return `cart_user_${state.user.user_id}`;
+        }
+        return "cart_guest";
+    }
+
     function loadCartFromStorage() {
-        state.cart = JSON.parse(localStorage.getItem(CART_KEY)) || [];
+        // Ensure user context is loaded first if not already
+        if (!state.user.user_id) loadUserContext();
+
+        const key = getCartKey();
+        state.cart = JSON.parse(localStorage.getItem(key)) || [];
+        console.log(`[App] Loaded cart from ${key}:`, state.cart);
     }
 
     function saveCartToStorage() {
-        localStorage.setItem(CART_KEY, JSON.stringify(state.cart));
+        const key = getCartKey();
+        localStorage.setItem(key, JSON.stringify(state.cart));
+        console.log(`[App] Saved cart to ${key}`);
     }
 
     function getCart() {
@@ -181,6 +217,9 @@ window.App = (function () {
     }
 
     /* ========= PUBLIC API ========= */
+
+    // Load context immediately (synchronous)
+    loadUserContext();
 
     return {
         init,

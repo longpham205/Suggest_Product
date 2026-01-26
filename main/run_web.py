@@ -1,30 +1,25 @@
-# backend/run_web.py
-
+# web/backend/run_web.py
 import uvicorn
 import logging
 import os
 import sys
 
-root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-sys.path.insert(0, root_dir)
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+sys.path.insert(0, PROJECT_ROOT)
 
-HOST = "0.0.0.0"
+HOST = "127.0.0.1"
 PORT = 8000
 RELOAD = True   # dev mode
 
 
 def run_backend():
-    """
-    Entry point to start FastAPI backend
-    """
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
     )
 
-    logging.getLogger("run_web").info(
-        f"Starting backend at http://{HOST}:{PORT}"
-    )
+    logging.info(f"Starting backend at http://{HOST}:{PORT}")
+    logging.info(f"Swagger docs at http://{HOST}:{PORT}/docs")
 
     uvicorn.run(
         "web.backend.main:app",

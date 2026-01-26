@@ -1,7 +1,7 @@
-# schemas/user.py
+# web/backend/schemas/user.py
 
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, Dict, List, Any
 
 
 class UserContext(BaseModel):
@@ -31,3 +31,12 @@ class UserRequest(BaseModel):
     user_id: int = Field(..., example=12345)
     time_bucket: str = Field(..., example="evening")
     is_weekend: bool = Field(..., example=False)
+
+
+class UserProfileResponse(BaseModel):
+    """
+    Response schema for user profile endpoint
+    """
+    cluster_info: Dict[str, Any]
+    recent_purchases: List[int]
+

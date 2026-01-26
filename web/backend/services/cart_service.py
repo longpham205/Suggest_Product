@@ -1,4 +1,4 @@
-# services/cart_service.py
+# web/backend/services/cart_service.py
 
 from typing import Optional
 from src.recommendation.hybrid_recommender import HybridRecommender

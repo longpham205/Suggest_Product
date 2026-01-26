@@ -2,31 +2,32 @@
 
 ## 1. Giới thiệu
 
-Dự án **Suggest Product** là một hệ thống gợi ý sản phẩm thông minh (Hybrid Recommendation System), được thiết kế nhằm mô phỏng và triển khai một pipeline hoàn chỉnh trong bài toán Recommendation System, từ tiền xử lý dữ liệu, trích xuất đặc trưng, phân cụm người dùng, khai phá luật kết hợp cho đến gợi ý và đánh giá chất lượng hệ thống.
+**Suggest Product** là một **Hybrid Recommendation System** được xây dựng nhằm mô phỏng một hệ thống gợi ý sản phẩm hoàn chỉnh trong thực tế. Dự án triển khai **end-to-end pipeline** cho bài toán Recommendation System, bao gồm từ xử lý dữ liệu thô, xây dựng đặc trưng, phân cụm người dùng, khai phá luật kết hợp có ngữ cảnh, cho đến sinh gợi ý, đánh giá offline và triển khai demo web.
 
-Hệ thống kết hợp nhiều kỹ thuật:
+Hệ thống không tập trung vào một thuật toán đơn lẻ, mà nhấn mạnh vào **kiến trúc kết hợp (hybrid architecture)**, trong đó mỗi thành phần đảm nhiệm một vai trò riêng trong quá trình ra quyết định gợi ý.
 
-* **User Clustering** (Behavior, Preference, Lifecycle)
-* **Context-Aware Association Rules (Apriori)**
-* **Hybrid Recommendation Engine**
-* **Offline Evaluation & Web Demo**
+### Các kỹ thuật chính
 
-Mục tiêu chính là tạo ra một kiến trúc rõ ràng, dễ mở rộng, phù hợp cho **đồ án học phần / đồ án tốt nghiệp** trong lĩnh vực Machine Learning & Data Science.
+- User Clustering (Behavior, Preference, Lifecycle)
+- Context-Aware Association Rules (FP-Growth)
+- Hybrid Recommendation Engine
+- Offline Evaluation
+- Web API & Frontend Demo
+
+Mục tiêu của dự án là xây dựng một hệ thống có **cấu trúc rõ ràng, dễ mở rộng**, phù hợp cho **đồ án học phần / đồ án tốt nghiệp / nghiên cứu học thuật** trong lĩnh vực *Machine Learning & Data Science*.
 
 ---
 
 ## 2. Kiến trúc tổng thể hệ thống
-
-Pipeline tổng quát của hệ thống:
 
 ```
 Raw Data
   → Preprocessing
     → Feature Engineering
       → User Clustering
-        → Association Rules (Context-aware)
+        → Context-Aware Association Rules
           → Hybrid Recommendation Engine
-            → Evaluation & Web API
+            → Offline Evaluation & Web API
 ```
 
 ---
@@ -34,15 +35,16 @@ Raw Data
 ## 3. Cấu trúc thư mục
 
 ```
-project-root/
-├── dataset/                 # Dữ liệu sau tiền xử lý
-├── src/                     # Mã nguồn chính
-├── checkpoints/             # Model & object đã train
-├── results/                 # Kết quả đánh giá & phân cụm
-├── main/                    # Script chạy từng giai đoạn
-├── web/                     # Backend & Frontend demo
-├── notebooks/               # Notebook phân tích & thử nghiệm
-├── run_pipeline.py          # Chạy toàn bộ pipeline
+Suggest_Product/
+├── dataset/
+├── src/
+├── checkpoints/
+├── results/
+├── main/
+├── notebooks/
+├── web/
+├── run_pipeline.py
+├── requirements.txt
 └── README.md
 ```
 
@@ -50,164 +52,100 @@ project-root/
 
 ## 4. Dataset (dataset/processed)
 
-Thư mục này chứa dữ liệu **đã được tiền xử lý**, dùng trực tiếp cho các bước ML:
-
-| File                     | Mô tả                                             |
-| ------------------------ | ------------------------------------------------- |
-| behavior_features.csv    | Đặc trưng hành vi người dùng                      |
-| preference_features.csv  | Đặc trưng sở thích theo category                  |
-| lifecycle_features.csv   | Trạng thái vòng đời người dùng                    |
-| transactions_context.csv | Giao dịch có gắn ngữ cảnh (time, weekend, bucket) |
-| user_features.csv        | Tổng hợp đặc trưng người dùng                     |
-
----
-
-## 5. Preprocessing & Feature Engineering (src/preprocessing)
-
-Thực hiện các bước:
-
-* Làm sạch dữ liệu
-* Chuẩn hóa định dạng
-* Trích xuất đặc trưng hành vi, sở thích, vòng đời
-* Xây dựng transaction có ngữ cảnh
-
-Các file chính:
-
-* `clean_data.py`
-* `build_behavior_features.py`
-* `build_preference_features.py`
-* `build_lifecycle_features.py`
-* `build_transactions_context.py`
+| File | Mô tả |
+|------|------|
+| behavior_features.csv | Đặc trưng hành vi mua sắm |
+| preference_features.csv | Đặc trưng sở thích theo department |
+| lifecycle_features.csv | Đặc trưng vòng đời người dùng |
+| transactions_context.csv | Giao dịch có gắn ngữ cảnh |
+| transactions_context_extended.parquet | Giao dịch mở rộng |
+| user_features.csv | Tổng hợp đặc trưng người dùng |
 
 ---
 
-## 6. User Clustering (src/clustering)
+## 5. Preprocessing & Feature Engineering
 
-Hệ thống phân cụm người dùng theo 3 khía cạnh:
-
-### 6.1 Behavior Clustering
-
-Phân cụm dựa trên hành vi mua sắm.
-
-* Vector hóa đặc trưng
-* Chuẩn hóa dữ liệu
-* Huấn luyện KMeans
-
-### 6.2 Preference Clustering
-
-Phân cụm dựa trên sở thích sản phẩm (department/category).
-
-### 6.3 Lifecycle Assignment
-
-Gán người dùng vào các nhóm vòng đời (New, Active, Churn, Loyal) theo luật.
-
-Kết quả được lưu trong thư mục `results/` và model được lưu trong `checkpoints/`.
+Thực hiện làm sạch dữ liệu, xây dựng đặc trưng hành vi, sở thích, vòng đời và transaction có ngữ cảnh.
 
 ---
 
-## 7. Association Rules – Context Aware (src/association_rules)
+## 6. User Clustering
 
-Khai phá luật kết hợp dựa trên Apriori mở rộng, có xét **ngữ cảnh giao dịch**.
-
-Các bước chính:
-
-* Xây dựng itemset có context
-* Sinh candidate itemsets
-* Tính support, confidence
-* Sinh luật A → B
-* Lưu luật vào file `.pkl`
-
-File quan trọng:
-
-* `train_context_aware.py`
-* `rule_builder.py`
-* `association_rules.pkl`
+- **Behavior Clustering**: dựa trên hành vi mua sắm
+- **Preference Clustering**: dựa trên phân bố sở thích sản phẩm
+- **Lifecycle Assignment**: phân loại New / Active / Loyal / Churn
 
 ---
 
-## 8. Hybrid Recommendation Engine (src/recommendation)
+## 7. Association Rules – Context Aware
 
-Kết hợp nhiều nguồn để sinh gợi ý:
-
-* Association Rules
-* User Preference Cluster
-* Lifecycle Adjustment
-* Ranking & Filtering
-* Fallback cho cold-start user
-
-File trung tâm:
-
-* `hybrid_recommender.py`
+Khai phá luật kết hợp có xét ngữ cảnh bằng **FP-Growth**, lưu luật và index phục vụ truy vấn nhanh.
 
 ---
 
-## 9. Evaluation (src/evaluation)
+## 8. Hybrid Recommendation Engine
 
-Đánh giá offline chất lượng hệ thống bằng các metric phổ biến:
+Luồng sinh gợi ý:
 
-* Precision@K
-* Recall@K
-* Hit Rate
+```
+User + Context
+ → Candidate Generation
+   → Behavior Adjustment
+     → Preference Filtering
+       → Lifecycle Adjustment
+         → Ranking
+```
 
-Kết quả đánh giá được lưu trong thư mục `results/`.
+Hỗ trợ fallback cho cold-start user.
 
 ---
 
-## 10. Web Demo (web/)
+## 9. Evaluation
 
-Hệ thống có demo triển khai đơn giản:
+Đánh giá offline bằng Precision@K, Recall@K, Hit Rate@K.  
+Kết quả lưu trong `results/evaluate/`.
 
-### Backend
+---
 
-* FastAPI
-* Endpoint gợi ý sản phẩm
+## 10. Web Demo
 
-### Frontend
-
-* HTML/CSS/JS
-* Streamlit app cho demo nhanh
+- Backend: FastAPI
+- Frontend: HTML / CSS / JavaScript  
+Mục đích minh họa khả năng hoạt động của hệ thống.
 
 ---
 
 ## 11. Cách chạy hệ thống
 
-### 11.1 Cài đặt môi trường
+### Cài đặt môi trường
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 11.2 Chạy toàn bộ pipeline
+### Chạy pipeline
 
 ```bash
 python run_pipeline.py
 ```
 
-Hoặc chạy từng bước:
-
-```bash
-python main/run_preprocessing.py
-python main/run_clustering.py
-python main/run_associations.py
-python main/run_eval.py
-```
+Hoặc chạy từng bước trong thư mục `main/`.
 
 ---
 
 ## 12. Định hướng mở rộng
 
-* Áp dụng luật kết hợp k-item (level-3, level-4)
-* Thêm mô hình collaborative filtering
-* Online evaluation (A/B testing)
-* Cá nhân hóa theo thời gian thực
+- Collaborative Filtering
+- Online evaluation (A/B testing)
+- Real-time personalization
 
 ---
 
 ## 13. Kết luận
 
-Dự án minh họa một hệ thống gợi ý hoàn chỉnh theo hướng **Hybrid & Context-Aware**, phù hợp cho mục đích học tập, nghiên cứu và trình bày đồ án Machine Learning.
+Dự án minh họa một hệ thống gợi ý **Hybrid & Context-Aware**, kết hợp nhiều tín hiệu để tạo gợi ý cá nhân hóa, phù hợp cho học tập và nghiên cứu.
 
 ---
 
-**Tác giả**: Long Pham
+**Tác giả**: Long Pham  
 **Lĩnh vực**: Machine Learning – Recommendation Systems

@@ -1,4 +1,4 @@
-# services/user_service.py
+# web/backend/services/user_service.py
 
 import pandas as pd
 from typing import Dict, List
@@ -12,18 +12,24 @@ BEHAVIOR_CLUSTER_TEXT = {
     0: "Người mua không thường xuyên",
     1: "Người mua ổn định",
     2: "Người mua nhiều",
+    3: "Khách hàng tiềm năng",
+    4: "Khách hàng VIP",
 }
 
 PREFERENCE_CLUSTER_TEXT = {
     0: "Ưa chuộng hàng thiết yếu",
     1: "Ưa chuộng hàng khuyến mãi",
     2: "Ưa chuộng sản phẩm cao cấp",
+    3: "Ưa chuộng hàng mới",
+    4: "Ưa chuộng hàng đa dạng",
 }
 
 LIFECYCLE_STAGE_TEXT = {
     "new": "Khách hàng mới",
+    "regular": "Khách thường xuyên",
     "active": "Khách hàng đang hoạt động",
     "loyal": "Khách hàng trung thành",
+    "vip": "Khách VIP",
     "churn_risk": "Có nguy cơ rời bỏ",
 }
 
@@ -71,6 +77,7 @@ class UserProfileService:
         }
 
         return {
+            "user_id": user_id,
             "cluster_info": cluster_info,
             "recent_purchases": recent_items,
         }
@@ -82,13 +89,21 @@ class UserProfileService:
         self,
         user_id: int,
         k: int,
-    ) -> List[int]:
+    ) -> List[Dict]:
 
         user_df = self.df[self.df["user_id"] == user_id]
 
         if user_df.empty:
             return []
 
-        user_df = user_df.sort_values("order_time", ascending=False)
+        # Sort by order_time if column exists
+        if "order_time" in user_df.columns:
+            user_df = user_df.sort_values("order_time", ascending=False)
 
-        return user_df["product_id"].astype(int).head(k).tolist()
+        return (
+            user_df[["product_id", "product_name"]]
+            .assign(product_name=lambda x: x["product_name"].fillna(f"Sản phẩm #{x['product_id']}"))
+            .head(k)
+            .to_dict(orient="records")
+        )
+

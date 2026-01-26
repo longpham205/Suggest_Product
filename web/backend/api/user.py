@@ -1,9 +1,9 @@
-# api/user.py
+# web/backend/api/user.py
 
 from fastapi import APIRouter, Depends
-from schemas.user import UserProfileResponse
-from services.user_profile_service import UserProfileService
-from dependencies.model_loader import get_user_profile_service
+from web.backend.schemas.user import UserProfileResponse
+from web.backend.services.user_service import UserProfileService
+from web.backend.dependencies.model_loader import get_user_profile_service
 
 router = APIRouter(prefix="/api/user", tags=["user"])
 

@@ -1,151 +1,485 @@
-# Hybrid Recommendation System – Suggest Product
+# 🛍️ Hybrid Recommendation System – Suggest Product
 
-## 1. Giới thiệu
+<div align="center">
 
-**Suggest Product** là một **Hybrid Recommendation System** được xây dựng nhằm mô phỏng một hệ thống gợi ý sản phẩm hoàn chỉnh trong thực tế. Dự án triển khai **end-to-end pipeline** cho bài toán Recommendation System, bao gồm từ xử lý dữ liệu thô, xây dựng đặc trưng, phân cụm người dùng, khai phá luật kết hợp có ngữ cảnh, cho đến sinh gợi ý, đánh giá offline và triển khai demo web.
+![Machine Learning](https://img.shields.io/badge/Machine%20Learning-Recommendation%20System-blue)
+![Python](https://img.shields.io/badge/Python-3.8+-green)
+![Status](https://img.shields.io/badge/Status-Active-success)
 
-Hệ thống không tập trung vào một thuật toán đơn lẻ, mà nhấn mạnh vào **kiến trúc kết hợp (hybrid architecture)**, trong đó mỗi thành phần đảm nhiệm một vai trò riêng trong quá trình ra quyết định gợi ý.
+**Hệ thống gợi ý sản phẩm kết hợp đa chiến lược với phân cụm người dùng và khai phá luật kết hợp có ngữ cảnh**
 
-### Các kỹ thuật chính
+[Tính năng](#-tính-năng-chính) • [Cài đặt](#-cài-đặt) • [Sử dụng](#-cách-sử-dụng) • [Demo](#-web-demo) • [Tài liệu](#-tài-liệu-chi-tiết)
 
-- User Clustering (Behavior, Preference, Lifecycle)
-- Context-Aware Association Rules (FP-Growth)
-- Hybrid Recommendation Engine
-- Offline Evaluation
-- Web API & Frontend Demo
-
-Mục tiêu của dự án là xây dựng một hệ thống có **cấu trúc rõ ràng, dễ mở rộng**, phù hợp cho **đồ án học phần / đồ án tốt nghiệp / nghiên cứu học thuật** trong lĩnh vực *Machine Learning & Data Science*.
+</div>
 
 ---
 
-## 2. Kiến trúc tổng thể hệ thống
+## 📋 Mục lục
+
+- [Giới thiệu](#-giới-thiệu)
+- [Kiến trúc hệ thống](#-kiến-trúc-hệ-thống)
+- [Tính năng chính](#-tính-năng-chính)
+- [Cấu trúc dự án](#-cấu-trúc-dự-án)
+- [Dataset](#-dataset)
+- [Quy trình xử lý](#-quy-trình-xử-lý)
+- [Cài đặt](#-cài-đặt)
+- [Cách sử dụng](#-cách-sử-dụng)
+- [Web Demo](#-web-demo)
+- [Đánh giá](#-đánh-giá)
+- [Kết quả](#-kết-quả)
+- [Định hướng phát triển](#-định-hướng-phát-triển)
+- [Tác giả](#-tác-giả)
+
+---
+
+## 🎯 Giới thiệu
+
+**Suggest Product** là một **Hybrid Recommendation System** được xây dựng nhằm mô phỏng một hệ thống gợi ý sản phẩm hoàn chỉnh trong thực tế. Dự án triển khai **end-to-end pipeline** cho bài toán Recommendation System, bao gồm:
+
+- 🔄 Xử lý dữ liệu thô
+- ⚙️ Xây dựng đặc trưng
+- 👥 Phân cụm người dùng
+- 🔍 Khai phá luật kết hợp có ngữ cảnh
+- 🎯 Sinh gợi ý thông minh
+- 📊 Đánh giá offline
+- 🌐 Triển khai demo web
+
+> **Điểm nổi bật:** Hệ thống không tập trung vào một thuật toán đơn lẻ, mà nhấn mạnh vào **kiến trúc kết hợp (hybrid architecture)**, trong đó mỗi thành phần đảm nhiệm một vai trò riêng trong quá trình ra quyết định gợi ý.
+
+### 🔑 Các kỹ thuật chính
+
+| Kỹ thuật | Mô tả |
+|----------|-------|
+| **User Clustering** | Phân cụm theo Behavior, Preference, Lifecycle |
+| **Association Rules** | FP-Growth với Context-Aware |
+| **Hybrid Engine** | Kết hợp đa nguồn tín hiệu |
+| **Offline Evaluation** | Precision@K, Recall@K, Hit Rate@K |
+| **Web API** | FastAPI Backend + Frontend Demo |
+
+---
+
+## 🏗️ Kiến trúc hệ thống
+
+```mermaid
+graph LR
+    A[Raw Data] --> B[Preprocessing]
+    B --> C[Feature Engineering]
+    C --> D[User Clustering]
+    D --> E[Association Rules]
+    E --> F[Hybrid Engine]
+    F --> G[Evaluation]
+    F --> H[Web API]
+```
+
+### Luồng xử lý chi tiết
 
 ```
-Raw Data
-  → Preprocessing
-    → Feature Engineering
-      → User Clustering
-        → Context-Aware Association Rules
-          → Hybrid Recommendation Engine
-            → Offline Evaluation & Web API
+📦 Raw Data
+  ↓
+🔧 Preprocessing & Cleaning
+  ↓
+⚡ Feature Engineering
+  ├─ Behavior Features
+  ├─ Preference Features
+  └─ Lifecycle Features
+  ↓
+👥 User Clustering
+  ├─ Behavior Clustering
+  ├─ Preference Clustering
+  └─ Lifecycle Assignment
+  ↓
+🔍 Context-Aware Association Rules (FP-Growth)
+  ↓
+🎯 Hybrid Recommendation Engine
+  ├─ Candidate Generation
+  ├─ Behavior Adjustment
+  ├─ Preference Filtering
+  ├─ Lifecycle Adjustment
+  └─ Ranking
+  ↓
+📊 Offline Evaluation & 🌐 Web API
 ```
 
 ---
 
-## 3. Cấu trúc thư mục
+## ✨ Tính năng chính
+
+### 🎨 Phân cụm người dùng đa chiều
+
+- **Behavior Clustering**: Phân tích hành vi mua sắm (tần suất, giá trị, đa dạng)
+- **Preference Clustering**: Nhóm theo sở thích department/category
+- **Lifecycle Assignment**: Phân loại New / Active / Loyal / Churn
+
+### 🧠 Khai phá luật kết hợp thông minh
+
+- Sử dụng **FP-Growth Algorithm**
+- Tích hợp **Context-Aware** (thời gian, ngày trong tuần, mùa)
+- Index luật để truy vấn nhanh
+
+### 🔄 Hybrid Recommendation Engine
+
+- **Multi-Strategy Fusion**: Kết hợp nhiều nguồn tín hiệu
+- **Cold-Start Handling**: Xử lý người dùng mới
+- **Personalization**: Cá nhân hóa theo cluster và lịch sử
+- **Contextual Ranking**: Xếp hạng theo ngữ cảnh
+
+### 📊 Đánh giá toàn diện
+
+- **Precision@K**: Độ chính xác top-K
+- **Recall@K**: Độ phủ top-K
+- **Hit Rate@K**: Tỷ lệ hit
+- **Detailed Reports**: Báo cáo chi tiết theo từng metric
+
+---
+
+## 📁 Cấu trúc dự án
 
 ```
 Suggest_Product/
-├── dataset/
-├── src/
-├── checkpoints/
-├── results/
-├── main/
-├── notebooks/
-├── web/
-├── run_pipeline.py
-├── requirements.txt
-└── README.md
+│
+├── 📂 dataset/              # Dữ liệu gốc và đã xử lý
+│   ├── raw/                 # Dữ liệu thô
+│   └── processed/           # Dữ liệu đã xử lý
+│       ├── behavior_features.csv
+│       ├── preference_features.csv
+│       ├── lifecycle_features.csv
+│       ├── transactions_context.csv
+│       ├── transactions_context_extended.parquet
+│       └── user_features.csv
+│
+├── 📂 src/                  # Source code chính
+│   ├── preprocessing/       # Xử lý dữ liệu
+│   ├── clustering/          # Phân cụm người dùng
+│   ├── association_rules/   # Khai phá luật
+│   ├── recommendation/      # Engine gợi ý
+│   └── evaluation/          # Đánh giá
+│
+├── 📂 checkpoints/          # Lưu models và clusters
+│   ├── clusters/
+│   └── rules/
+│
+├── 📂 results/              # Kết quả đánh giá
+│   └── evaluate/
+│
+├── 📂 main/                 # Scripts chạy từng bước
+│   ├── 1_preprocessing.py
+│   ├── 2_clustering.py
+│   ├── 3_association_rules.py
+│   ├── 4_recommendation.py
+│   └── 5_evaluation.py
+│
+├── 📂 notebooks/            # Jupyter notebooks phân tích
+│
+├── 📂 web/                  # Web application
+│   ├── backend/             # FastAPI
+│   └── frontend/            # HTML/CSS/JS
+│
+├── 🚀 run_pipeline.py       # Chạy toàn bộ pipeline
+├── 📦 requirements.txt      # Dependencies
+└── 📖 README.md             # Tài liệu này
 ```
 
 ---
 
-## 4. Dataset (dataset/processed)
+## 📊 Dataset
 
-| File | Mô tả |
-|------|------|
-| behavior_features.csv | Đặc trưng hành vi mua sắm |
-| preference_features.csv | Đặc trưng sở thích theo department |
-| lifecycle_features.csv | Đặc trưng vòng đời người dùng |
-| transactions_context.csv | Giao dịch có gắn ngữ cảnh |
-| transactions_context_extended.parquet | Giao dịch mở rộng |
-| user_features.csv | Tổng hợp đặc trưng người dùng |
+### Dữ liệu đã xử lý (`dataset/processed/`)
+
+| File | Mô tả | Số lượng features |
+|------|-------|-------------------|
+| `behavior_features.csv` | Đặc trưng hành vi mua sắm | 10+ features |
+| `preference_features.csv` | Đặc trưng sở thích theo department | 20+ departments |
+| `lifecycle_features.csv` | Đặc trưng vòng đời người dùng | 5+ features |
+| `transactions_context.csv` | Giao dịch có gắn ngữ cảnh | Transaction + Context |
+| `transactions_context_extended.parquet` | Giao dịch mở rộng (tối ưu) | Extended features |
+| `user_features.csv` | Tổng hợp đặc trưng người dùng | 35+ features |
+
+### Đặc trưng chính
+
+**Behavior Features:**
+- Tần suất mua hàng (purchase_frequency)
+- Giá trị trung bình đơn hàng (avg_order_value)
+- Tổng chi tiêu (total_spent)
+- Độ đa dạng sản phẩm (product_diversity)
+
+**Preference Features:**
+- Phân bố theo department
+- Top categories yêu thích
+- Brand affinity
+
+**Lifecycle Features:**
+- Recency (ngày mua gần nhất)
+- Frequency (tần suất mua)
+- Monetary (giá trị mua)
+- Lifecycle stage (New/Active/Loyal/Churn)
 
 ---
 
-## 5. Preprocessing & Feature Engineering
+## ⚙️ Quy trình xử lý
 
-Thực hiện làm sạch dữ liệu, xây dựng đặc trưng hành vi, sở thích, vòng đời và transaction có ngữ cảnh.
+### 1️⃣ Preprocessing & Feature Engineering
 
----
-
-## 6. User Clustering
-
-- **Behavior Clustering**: dựa trên hành vi mua sắm
-- **Preference Clustering**: dựa trên phân bố sở thích sản phẩm
-- **Lifecycle Assignment**: phân loại New / Active / Loyal / Churn
-
----
-
-## 7. Association Rules – Context Aware
-
-Khai phá luật kết hợp có xét ngữ cảnh bằng **FP-Growth**, lưu luật và index phục vụ truy vấn nhanh.
-
----
-
-## 8. Hybrid Recommendation Engine
-
-Luồng sinh gợi ý:
-
+```python
+# Làm sạch dữ liệu
+# Xử lý missing values
+# Tạo đặc trưng hành vi, sở thích, vòng đời
+# Gắn ngữ cảnh cho transactions
 ```
-User + Context
- → Candidate Generation
-   → Behavior Adjustment
-     → Preference Filtering
-       → Lifecycle Adjustment
-         → Ranking
+
+### 2️⃣ User Clustering
+
+```python
+# Behavior Clustering: K-Means/DBSCAN
+# Preference Clustering: Hierarchical/K-Means
+# Lifecycle Assignment: RFM Analysis
 ```
 
-Hỗ trợ fallback cho cold-start user.
+### 3️⃣ Association Rules Mining
+
+```python
+# FP-Growth Algorithm
+# Context-Aware Rules
+# Rule Indexing for fast lookup
+```
+
+### 4️⃣ Hybrid Recommendation
+
+```python
+# Input: User ID + Context
+# Process:
+#   1. Candidate Generation (Association Rules)
+#   2. Behavior Adjustment (Cluster-based)
+#   3. Preference Filtering (Category matching)
+#   4. Lifecycle Adjustment (Stage-based weighting)
+#   5. Final Ranking
+# Output: Top-K Recommendations
+```
+
+### 5️⃣ Evaluation
+
+```python
+# Metrics: Precision@K, Recall@K, Hit Rate@K
+# Cross-validation
+# Performance analysis
+```
 
 ---
 
-## 9. Evaluation
+## 🔧 Cài đặt
 
-Đánh giá offline bằng Precision@K, Recall@K, Hit Rate@K.  
-Kết quả lưu trong `results/evaluate/`.
+### Yêu cầu hệ thống
 
----
+- Python 3.8+
+- 4GB RAM (khuyến nghị 8GB+)
+- 2GB dung lượng ổ cứng
 
-## 10. Web Demo
-
-- Backend: FastAPI
-- Frontend: HTML / CSS / JavaScript  
-Mục đích minh họa khả năng hoạt động của hệ thống.
-
----
-
-## 11. Cách chạy hệ thống
-
-### Cài đặt môi trường
+### Cài đặt dependencies
 
 ```bash
+# Clone repository
+git clone https://github.com/yourusername/Suggest_Product.git
+cd Suggest_Product
+
+# Tạo virtual environment (khuyến nghị)
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+# hoặc
+venv\Scripts\activate     # Windows
+
+# Cài đặt packages
 pip install -r requirements.txt
 ```
 
-### Chạy pipeline
+### Các thư viện chính
+
+- `pandas`, `numpy`: Xử lý dữ liệu
+- `scikit-learn`: Machine Learning
+- `mlxtend`: FP-Growth
+- `fastapi`, `uvicorn`: Web API
+- `matplotlib`, `seaborn`: Visualization
+
+---
+
+## 🚀 Cách sử dụng
+
+### Chạy toàn bộ pipeline
 
 ```bash
 python run_pipeline.py
 ```
 
-Hoặc chạy từng bước trong thư mục `main/`.
+### Chạy từng bước riêng lẻ
+
+```bash
+# Bước 1: Preprocessing
+python main/1_preprocessing.py
+
+# Bước 2: Clustering
+python main/2_clustering.py
+
+# Bước 3: Association Rules
+python main/3_association_rules.py
+
+# Bước 4: Generate Recommendations
+python main/4_recommendation.py
+
+# Bước 5: Evaluation
+python main/5_evaluation.py
+```
+
+### Sử dụng trong code
+
+```python
+from src.recommendation.hybrid_engine import HybridRecommendationEngine
+
+# Khởi tạo engine
+engine = HybridRecommendationEngine()
+
+# Sinh gợi ý
+recommendations = engine.recommend(
+    user_id=12345,
+    context={
+        'hour': 14,
+        'day_of_week': 5,
+        'season': 'winter'
+    },
+    top_k=10
+)
+
+print(recommendations)
+```
 
 ---
 
-## 12. Định hướng mở rộng
+## 🌐 Web Demo
 
-- Collaborative Filtering
-- Online evaluation (A/B testing)
-- Real-time personalization
+### Khởi động server
+
+```bash
+# Di chuyển vào thư mục web
+cd web
+
+# Chạy backend (FastAPI)
+uvicorn backend.main:app --reload --port 8000
+
+# Mở trình duyệt và truy cập
+# http://localhost:8000
+```
+
+### API Endpoints
+
+| Method | Endpoint | Mô tả |
+|--------|----------|-------|
+| GET | `/` | Trang chủ |
+| POST | `/recommend` | Lấy gợi ý sản phẩm |
+| GET | `/user/{user_id}` | Thông tin người dùng |
+| GET | `/health` | Kiểm tra health |
+
+### Demo Interface
+
+- 🎨 Giao diện thân thiện
+- 🔍 Tìm kiếm và lọc sản phẩm
+- 📊 Hiển thị cluster và lifecycle
+- 🎯 Gợi ý real-time
 
 ---
 
-## 13. Kết luận
+## 📈 Đánh giá
 
-Dự án minh họa một hệ thống gợi ý **Hybrid & Context-Aware**, kết hợp nhiều tín hiệu để tạo gợi ý cá nhân hóa, phù hợp cho học tập và nghiên cứu.
+### Metrics sử dụng
+
+| Metric | Công thức | Ý nghĩa |
+|--------|-----------|---------|
+| **Precision@K** | TP / (TP + FP) | Tỷ lệ gợi ý đúng trong top-K |
+| **Recall@K** | TP / (TP + FN) | Tỷ lệ phủ items liên quan |
+| **Hit Rate@K** | Có hit / Tổng users | Tỷ lệ user có ít nhất 1 hit |
+
+### Kết quả thực nghiệm
+
+```
+📊 Evaluation Results (K=10):
+├─ Precision@10: 0.XX
+├─ Recall@10: 0.XX
+└─ Hit Rate@10: 0.XX
+
+📁 Chi tiết: results/evaluate/evaluation_report.json
+```
 
 ---
 
-**Tác giả**: Long Pham  
-**Lĩnh vực**: Machine Learning – Recommendation Systems
+## 🎯 Kết quả
+
+### Ưu điểm
+
+✅ Kiến trúc hybrid linh hoạt  
+✅ Xử lý cold-start user  
+✅ Context-aware recommendations  
+✅ Đánh giá offline toàn diện  
+✅ Code structure rõ ràng, dễ mở rộng  
+
+### Hạn chế & Cải thiện
+
+🔄 Chưa có collaborative filtering  
+🔄 Chưa A/B testing online  
+🔄 Chưa optimize real-time performance  
+
+---
+
+## 🚀 Định hướng phát triển
+
+### Ngắn hạn
+
+- [ ] Tích hợp **Collaborative Filtering** (User-based, Item-based)
+- [ ] Thêm **Content-based filtering**
+- [ ] Optimize performance với **Caching**
+- [ ] Tăng cường **Feature Engineering**
+
+### Dài hạn
+
+- [ ] **Deep Learning** models (Neural Collaborative Filtering)
+- [ ] **Online Learning** và A/B Testing
+- [ ] **Real-time Personalization**
+- [ ] **Multi-armed Bandit** cho exploration-exploitation
+- [ ] **Graph-based** recommendations
+- [ ] **Deployment** lên production (Docker, Kubernetes)
+
+---
+
+## 👨‍💻 Tác giả
+
+**Nhóm 1 - MachineLearning**
+
+
+**Lĩnh vực:** Machine Learning – Recommendation Systems
+
+---
+
+## 📄 License
+
+Dự án này được phát hành dưới giấy phép **MIT License**. Xem file [LICENSE](LICENSE) để biết thêm chi tiết.
+
+---
+
+## 🙏 Acknowledgments
+
+- Dataset được sử dụng cho mục đích học tập và nghiên cứu
+- Cảm ơn cộng đồng Machine Learning Việt Nam
+- Tham khảo các paper và tài liệu về Recommendation Systems
+
+---
+
+## 📚 Tài liệu tham khảo
+
+1. Agrawal, R., & Srikant, R. (1994). Fast Algorithms for Mining Association Rules
+2. Koren, Y., Bell, R., & Volinsky, C. (2009). Matrix Factorization Techniques for Recommender Systems
+3. He, X., et al. (2017). Neural Collaborative Filtering
+
+---
+
+<div align="center">
+
+**⭐ Nếu dự án hữu ích, hãy cho một Star! ⭐**
+
+Made with ❤️ by Nhom 1
+
+</div>

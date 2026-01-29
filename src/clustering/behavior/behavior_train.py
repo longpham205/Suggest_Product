@@ -30,7 +30,7 @@ from src.config.settings import (
 # Helper: diễn giải cluster
 # =========================
 def interpret_cluster(row):
-    if row["total_orders"] < 8 and row["reorder_ratio"] < 0.3:
+    if row["total_orders"] < 7 and row["reorder_ratio"] < 0.3:
         return "Ít đơn, ít mua", "Người dùng không thường xuyên"
 
     if row["total_orders"] > 35 and row["reorder_ratio"] > 0.7:
@@ -39,7 +39,7 @@ def interpret_cluster(row):
     if row["total_orders"] > 15 and row["reorder_ratio"] > 0.4:
         return "Hoạt động ổn định", "Nhóm người dùng chủ lực"
 
-    if row["total_orders"] >= 8:
+    if row["total_orders"] >= 7 and row["reorder_ratio"] < 0.4:
         return "Mức trung bình", "Người dùng phổ thông"
 
     return "Khá tích cực", "Người dùng tiềm năng"

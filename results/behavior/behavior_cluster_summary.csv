@@ -1,0 +1,6 @@
+cluster,total_orders,avg_days_between_orders,total_products,reorder_ratio,num_users,Đặc trưng chính,Mô tả
+0,18.86,12.1,181.26,0.55,52065,Hoạt động ổn định,Nhóm người dùng chủ lực
+1,47.62,7.5,516.78,0.71,32158,"Nhiều đơn, mua đều",Người dùng trung thành
+2,5.37,24.12,38.81,0.23,41536,"Ít đơn, ít mua",Người dùng không thường xuyên
+3,7.01,11.64,53.61,0.29,37305,Mức trung bình,Người dùng phổ thông
+4,9.8,20.35,96.22,0.46,43145,Khá tích cực,Người dùng tiềm năng

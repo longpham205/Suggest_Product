@@ -1,0 +1,8 @@
+{
+    "Precision@10": 0.09,
+    "Recall@10": 0.08237445327781462,
+    "F1@10": 0.08152214623669822,
+    "HitRate@10": 0.6,
+    "UserCoverage": 1.0,
+    "num_users_evaluated": 10
+}

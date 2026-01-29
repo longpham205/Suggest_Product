@@ -1,0 +1,13 @@
+LIFECYCLE THRESHOLDS (AUTO)
+
+orders: {0.4: 8.0, 0.7: 17.0, 0.9: 38.0}
+days: {0.5: 151.0, 0.8: 280.0}
+span: {0.7: 16.0}
+
+BẢNG PHÂN BỐ LIFECYCLE STAGE
+
+lifecycle_stage  num_users
+        regular      90345
+            new      73591
+          loyal      21629
+            vip      20644

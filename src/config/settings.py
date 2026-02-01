@@ -225,12 +225,12 @@ CONTEXT_HIERARCHY = {
     # Level 2: Remove day_of_week and basket_size (4 dimensions)
     "L2": [
         "time_bucket", "is_weekend", 
-        "lifecycle_stage", "preference_cluster"
+        "behavior_cluster", "preference_cluster"
     ],
     
     # Level 3: Temporal + lifecycle only (3 dimensions)
     "L3": [
-        "time_bucket", "is_weekend", "lifecycle_stage"
+        "time_bucket", "is_weekend", "behavior_cluster"
     ],
     
     # Level 4: Temporal only (2 dimensions)

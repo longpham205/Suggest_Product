@@ -1,3 +1,5 @@
+#main.run_clustering.py
+
 import os
 import sys
 
@@ -11,19 +13,24 @@ from src.clustering.behavior.behavior_train import train_behavior_clustering
 from src.clustering.preference.preference_train import train_preference_clustering
 from src.clustering.lifecycle.assign_lifecycle import assign_lifecycle
 
-# ======================================================
-# RUN BEHAVIOR
-# ======================================================
-train_behavior_clustering()
+def run_clustering():
+    # ======================================================
+    # RUN BEHAVIOR
+    # ======================================================
+    train_behavior_clustering()
 
-# ======================================================
-# RUN CLUSTERING
-# ======================================================
-train_preference_clustering()
+    # ======================================================
+    # RUN CLUSTERING
+    # ======================================================
+    train_preference_clustering()
 
-# ======================================================
-# RUN LIFECYCLE
-# ======================================================
-assign_lifecycle()
+    # ======================================================
+    # RUN LIFECYCLE
+    # ======================================================
+    assign_lifecycle()
 
-print("\nCLUSTERING DONE")
+    print("\nCLUSTERING DONE")
+
+if __name__ == "__main__":
+    run_clustering():
+    

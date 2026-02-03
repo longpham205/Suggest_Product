@@ -174,8 +174,8 @@ FPGROWTH_RULE_INDEX_PATH = (
 # RULE SCORING
 # =================================================
 RULE_SCORE_METHOD = "confidence_lift_weighted"
-RULE_SCORE_CONF_WEIGHT = 0.7
-RULE_SCORE_LIFT_WEIGHT = 0.3
+RULE_SCORE_CONF_WEIGHT = 0.6
+RULE_SCORE_LIFT_WEIGHT = 0.04
 MIN_RULE_SCORE = 0.0
 
 # =================================================

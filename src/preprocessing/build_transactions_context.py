@@ -1,4 +1,4 @@
-# src/preprocessing/build_transactions_context_extended.py
+# src/preprocessing/build_transactions_context.py
 """
 Build extended transactions với 8 context dimensions
 
@@ -143,23 +143,20 @@ def build_context_key(row: pd.Series, dimensions: list) -> str:
 # =====================================================
 # MAIN PIPELINE
 # =====================================================
-def build_transactions_context_extended(
+def build_transactions_context(
     save_parquet: bool = True,
     sample_ratio: Optional[float] = None,
 ) -> pd.DataFrame:
-
-    logger.info("=" * 70)
-    logger.info("BUILD EXTENDED CONTEXT TRANSACTIONS (SAFE MODE)")
-    logger.info("=" * 70)
 
     # =================================================
     # 1. Load orders
     # =================================================
     orders = pd.read_csv(ORDERS_PATH)
 
-    if sample_ratio and 0 < sample_ratio < 1:
+    if isinstance(sample_ratio, (int, float)) and 0 < sample_ratio < 1:
         orders = orders.sample(frac=sample_ratio, random_state=42)
         logger.info(f"Sampled orders: {len(orders):,}")
+
 
     logger.info(f"Orders loaded: {len(orders):,}")
 
@@ -342,7 +339,7 @@ if __name__ == "__main__":
     parser.add_argument("--sample", type=float, default=None)
     args = parser.parse_args()
 
-    df = build_transactions_context_extended(
+    df = build_transactions_context(
         save_parquet=True,
         sample_ratio=args.sample,
     )
